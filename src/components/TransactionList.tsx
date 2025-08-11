@@ -102,7 +102,7 @@ const TransactionList = ({ transactions, categories }: TransactionListProps) => 
                     </div>
                   )}
                   <span className={`font-semibold ${isIncome ? 'text-success' : 'text-destructive'}`}>
-                    {isIncome ? '+' : '-'}Php{transaction.amount.toFixed(2)}
+                    {isIncome ? '+' : '-'}Php{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>

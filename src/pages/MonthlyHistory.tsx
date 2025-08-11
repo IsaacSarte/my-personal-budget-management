@@ -127,7 +127,7 @@ const MonthlyHistory = () => {
   };
 
   const formatCurrency = (amount: number) => {
-    return `Php${amount.toFixed(2)}`;
+    return `Php${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   if (loading) {

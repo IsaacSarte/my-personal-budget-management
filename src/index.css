@@ -8,39 +8,39 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 45 100% 97%; /* #fffcf2 - cream white */
     --foreground: 222.2 84% 4.9%;
 
-    --card: 0 0% 100%;
+    --card: 45 100% 97%; /* #fffcf2 - cream white */
     --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 0 0% 100%;
+    --popover: 45 100% 97%; /* #fffcf2 - cream white */
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 142 76% 36%;
-    --primary-foreground: 356 29% 98%;
+    --primary: 356 100% 82%; /* #ffa5ab - light pink */
+    --primary-foreground: 45 100% 97%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 44 78% 76%; /* #f2d492 - gold */
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 210 40% 96.1%;
+    --muted: 45 50% 95%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 44 78% 76%; /* #f2d492 - gold */
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 45 100% 97%;
 
     --success: 142 76% 36%;
-    --success-foreground: 356 29% 98%;
+    --success-foreground: 45 100% 97%;
 
-    --warning: 48 96% 53%;
+    --warning: 44 78% 65%; /* Slightly darker gold for warning */
     --warning-foreground: 26 83% 14%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 45 30% 90%;
+    --input: 45 30% 92%;
+    --ring: 356 100% 82%; /* Light pink for focus rings */
 
     --radius: 0.5rem;
 
@@ -63,38 +63,38 @@ All colors MUST be HSL.
 
   .dark {
     --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --foreground: 45 100% 97%;
 
     --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card-foreground: 45 100% 97%;
 
     --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover-foreground: 45 100% 97%;
 
-    --primary: 142 70% 45%;
-    --primary-foreground: 356 29% 98%;
+    --primary: 356 80% 70%; /* Adjusted pink for dark mode */
+    --primary-foreground: 45 100% 97%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 44 60% 50%; /* Adjusted gold for dark mode */
+    --secondary-foreground: 45 100% 97%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 44 60% 50%; /* Adjusted gold for dark mode */
+    --accent-foreground: 45 100% 97%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 45 100% 97%;
 
     --success: 142 70% 45%;
-    --success-foreground: 356 29% 98%;
+    --success-foreground: 45 100% 97%;
 
-    --warning: 48 96% 53%;
+    --warning: 44 70% 55%;
     --warning-foreground: 26 83% 14%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 356 80% 70%; /* Pink for dark mode focus rings */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

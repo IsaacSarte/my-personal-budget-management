@@ -280,7 +280,7 @@ const BudgetDashboard = () => {
             ) : (
               <div>
                 <div className="text-2xl font-bold">
-                  Php{budgetSettings.starting_amount.toFixed(2)}
+                  Php{budgetSettings.starting_amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <Button
                   variant="ghost"
@@ -309,7 +309,7 @@ const BudgetDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${isNegativeBalance ? 'text-destructive' : 'text-success'}`}>
-              Php{budgetSettings.current_balance.toFixed(2)}
+              Php{budgetSettings.current_balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             {isNegativeBalance && (
               <Badge variant="destructive" className="mt-2">
