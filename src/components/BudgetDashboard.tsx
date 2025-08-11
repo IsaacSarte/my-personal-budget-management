@@ -93,21 +93,53 @@ const BudgetDashboard = () => {
   const fetchData = async () => {
     try {
       const [settingsRes, transactionsRes, categoriesRes] = await Promise.all([
-        supabase.from("budget_settings").select("*").single(),
+        supabase.from("budget_settings").select("*").limit(1),
         supabase.from("transactions").select("*").order("transaction_date", { ascending: false }),
         supabase.from("categories").select("*").order("name")
       ]);
 
-      if (settingsRes.data) setBudgetSettings(settingsRes.data);
+      console.log("Settings response:", settingsRes);
+      console.log("Transactions response:", transactionsRes);
+      console.log("Categories response:", categoriesRes);
+
+      if (settingsRes.data && settingsRes.data.length > 0) {
+        setBudgetSettings(settingsRes.data[0]);
+      } else {
+        // Create default budget settings if none exist
+        const defaultSettings = {
+          id: crypto.randomUUID(),
+          starting_amount: 0,
+          current_balance: 0,
+          updated_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        };
+        setBudgetSettings(defaultSettings);
+        localStorage.setItem("budget_settings", JSON.stringify(defaultSettings));
+      }
+      
       if (transactionsRes.data) setTransactions(transactionsRes.data as Transaction[]);
       if (categoriesRes.data) setCategories(categoriesRes.data);
     } catch (error) {
+      console.error("Fetch data error:", error);
       // If offline, load from localStorage
       const offlineSettings = localStorage.getItem("budget_settings");
       const offlineTransactions = localStorage.getItem("transactions");
       const offlineCategories = localStorage.getItem("categories");
 
-      if (offlineSettings) setBudgetSettings(JSON.parse(offlineSettings));
+      if (offlineSettings) {
+        setBudgetSettings(JSON.parse(offlineSettings));
+      } else {
+        // Create default budget settings if none exist
+        const defaultSettings = {
+          id: crypto.randomUUID(),
+          starting_amount: 0,
+          current_balance: 0,
+          updated_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        };
+        setBudgetSettings(defaultSettings);
+      }
+      
       if (offlineTransactions) setTransactions(JSON.parse(offlineTransactions));
       if (offlineCategories) setCategories(JSON.parse(offlineCategories));
     }
