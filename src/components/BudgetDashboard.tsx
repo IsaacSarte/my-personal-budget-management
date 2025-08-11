@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Wallet, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
+import { Plus, Wallet, TrendingDown, TrendingUp, AlertTriangle, History } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import TransactionForm from "./TransactionForm";
@@ -334,6 +335,16 @@ const BudgetDashboard = () => {
 
       {/* Categories */}
       <CategoryList categories={categories} />
+
+      {/* Navigation */}
+      <div className="flex justify-center">
+        <Link to="/monthly-history">
+          <Button variant="outline" className="gap-2">
+            <History className="h-4 w-4" />
+            View Monthly History
+          </Button>
+        </Link>
+      </div>
 
       {/* Transactions */}
       <TransactionList transactions={transactions} categories={categories} />
