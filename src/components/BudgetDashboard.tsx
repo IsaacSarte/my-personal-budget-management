@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Wallet, TrendingDown, TrendingUp, AlertTriangle, History } from "lucide-react";
+import { Plus, Wallet, TrendingDown, TrendingUp, AlertTriangle, History, LogOut, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import TransactionForm from "./TransactionForm";
@@ -36,6 +37,7 @@ type Category = {
 };
 
 const BudgetDashboard = () => {
+  const { user, signOut } = useAuth();
   const [budgetSettings, setBudgetSettings] = useState<BudgetSettings | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -299,10 +301,20 @@ const BudgetDashboard = () => {
             )}
           </div>
         </div>
-        <Button onClick={() => setShowTransactionForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Transaction
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <User className="h-4 w-4" />
+            <span>{user?.email}</span>
+          </div>
+          <Button onClick={() => setShowTransactionForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Transaction
+          </Button>
+          <Button variant="outline" onClick={signOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
       </div>
 
       {/* Balance Overview */}
