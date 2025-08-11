@@ -140,7 +140,7 @@ const BudgetDashboard = () => {
     toast.success("Starting amount updated!");
   };
 
-  const addTransaction = (transaction: Omit<Transaction, "id" | "synced">) => {
+  const addTransaction = async (transaction: Omit<Transaction, "id" | "synced">) => {
     const newTransaction: Transaction = {
       ...transaction,
       id: crypto.randomUUID(),
@@ -151,7 +151,18 @@ const BudgetDashboard = () => {
     localStorage.setItem("transactions", JSON.stringify([newTransaction, ...transactions]));
 
     if (isOnline) {
-      supabase.from("transactions").insert(newTransaction);
+      try {
+        const { error } = await supabase.from("transactions").insert(newTransaction);
+        if (error) {
+          console.error("Failed to insert transaction:", error);
+          toast.error("Failed to save transaction to database");
+          return;
+        }
+      } catch (error) {
+        console.error("Database error:", error);
+        toast.error("Database connection error");
+        return;
+      }
     }
 
     setShowTransactionForm(false);
