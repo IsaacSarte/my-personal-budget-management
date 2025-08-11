@@ -58,6 +58,29 @@ const BudgetDashboard = () => {
 
   useEffect(() => {
     fetchData();
+    
+    // Set up real-time subscription for budget_settings changes
+    const channel = supabase
+      .channel('budget-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'budget_settings'
+        },
+        (payload) => {
+          console.log('Budget settings updated:', payload);
+          if (payload.new) {
+            setBudgetSettings(payload.new as BudgetSettings);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -108,17 +131,27 @@ const BudgetDashboard = () => {
       }
     }
     
-    fetchData(); // Refresh data from server
+    // Refresh data from server after syncing
+    await fetchData();
     toast.success("Data synced successfully!");
+  };
+
+  const calculateNewBalance = (currentTransactions: Transaction[], startingAmount: number) => {
+    const totalChange = currentTransactions.reduce((sum, t) => {
+      return sum + (t.transaction_type === 'income' ? t.amount : -t.amount);
+    }, 0);
+    return startingAmount + totalChange;
   };
 
   const updateStartingAmount = async () => {
     const amount = parseFloat(newStartingAmount);
     if (isNaN(amount)) return;
 
+    const newBalance = calculateNewBalance(transactions, amount);
     const updatedSettings = {
       ...budgetSettings!,
-      starting_amount: amount
+      starting_amount: amount,
+      current_balance: newBalance
     };
 
     setBudgetSettings(updatedSettings);
@@ -151,8 +184,21 @@ const BudgetDashboard = () => {
     
     console.log("New transaction object:", newTransaction);
 
-    setTransactions(prev => [newTransaction, ...prev]);
-    localStorage.setItem("transactions", JSON.stringify([newTransaction, ...transactions]));
+    const updatedTransactions = [newTransaction, ...transactions];
+    setTransactions(updatedTransactions);
+    localStorage.setItem("transactions", JSON.stringify(updatedTransactions));
+
+    // Update balance locally for immediate feedback
+    if (budgetSettings) {
+      const newBalance = calculateNewBalance(updatedTransactions, budgetSettings.starting_amount);
+      const updatedBudgetSettings = {
+        ...budgetSettings,
+        current_balance: newBalance,
+        updated_at: new Date().toISOString()
+      };
+      setBudgetSettings(updatedBudgetSettings);
+      localStorage.setItem("budget_settings", JSON.stringify(updatedBudgetSettings));
+    }
 
     if (isOnline) {
       try {
@@ -162,6 +208,8 @@ const BudgetDashboard = () => {
           toast.error("Failed to save transaction to database");
           return;
         }
+        // Note: The real-time subscription will handle updating the budget settings
+        // when the database trigger recalculates the balance
       } catch (error) {
         console.error("Database error:", error);
         toast.error("Database connection error");
