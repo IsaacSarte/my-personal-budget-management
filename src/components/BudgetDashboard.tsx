@@ -91,20 +91,28 @@ const BudgetDashboard = () => {
   }, [isOnline]);
 
   const fetchData = async () => {
+    console.log("=== FETCHDATA STARTED ===");
     try {
+      console.log("Making API calls...");
       const [settingsRes, transactionsRes, categoriesRes] = await Promise.all([
-        supabase.from("budget_settings").select("*").limit(1),
+        supabase.from("budget_settings").select("*").maybeSingle(),
         supabase.from("transactions").select("*").order("transaction_date", { ascending: false }),
         supabase.from("categories").select("*").order("name")
       ]);
 
+      console.log("=== API RESPONSES ===");
       console.log("Settings response:", settingsRes);
+      console.log("Settings data:", settingsRes.data);
+      console.log("Settings error:", settingsRes.error);
       console.log("Transactions response:", transactionsRes);
       console.log("Categories response:", categoriesRes);
 
-      if (settingsRes.data && settingsRes.data.length > 0) {
-        setBudgetSettings(settingsRes.data[0]);
+      if (settingsRes.data) {
+        console.log("Setting budget settings to:", settingsRes.data);
+        setBudgetSettings(settingsRes.data);
+        localStorage.setItem("budget_settings", JSON.stringify(settingsRes.data));
       } else {
+        console.log("No budget settings found, creating default");
         // Create default budget settings if none exist
         const defaultSettings = {
           id: crypto.randomUUID(),
@@ -113,22 +121,38 @@ const BudgetDashboard = () => {
           updated_at: new Date().toISOString(),
           created_at: new Date().toISOString()
         };
+        console.log("Default settings:", defaultSettings);
         setBudgetSettings(defaultSettings);
         localStorage.setItem("budget_settings", JSON.stringify(defaultSettings));
       }
       
-      if (transactionsRes.data) setTransactions(transactionsRes.data as Transaction[]);
-      if (categoriesRes.data) setCategories(categoriesRes.data);
+      if (transactionsRes.data) {
+        console.log("Setting transactions:", transactionsRes.data.length, "items");
+        setTransactions(transactionsRes.data as Transaction[]);
+        localStorage.setItem("transactions", JSON.stringify(transactionsRes.data));
+      }
+      if (categoriesRes.data) {
+        console.log("Setting categories:", categoriesRes.data.length, "items");
+        setCategories(categoriesRes.data);
+        localStorage.setItem("categories", JSON.stringify(categoriesRes.data));
+      }
+      console.log("=== FETCHDATA COMPLETED ===");
     } catch (error) {
-      console.error("Fetch data error:", error);
+      console.error("=== FETCH DATA ERROR ===", error);
       // If offline, load from localStorage
       const offlineSettings = localStorage.getItem("budget_settings");
       const offlineTransactions = localStorage.getItem("transactions");
       const offlineCategories = localStorage.getItem("categories");
 
+      console.log("Loading offline data...");
+      console.log("Offline settings:", offlineSettings);
+
       if (offlineSettings) {
-        setBudgetSettings(JSON.parse(offlineSettings));
+        const parsedSettings = JSON.parse(offlineSettings);
+        console.log("Setting offline budget settings:", parsedSettings);
+        setBudgetSettings(parsedSettings);
       } else {
+        console.log("No offline settings, creating default");
         // Create default budget settings if none exist
         const defaultSettings = {
           id: crypto.randomUUID(),
@@ -137,6 +161,7 @@ const BudgetDashboard = () => {
           updated_at: new Date().toISOString(),
           created_at: new Date().toISOString()
         };
+        console.log("Default offline settings:", defaultSettings);
         setBudgetSettings(defaultSettings);
       }
       
