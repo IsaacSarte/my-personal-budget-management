@@ -308,7 +308,7 @@ const BudgetDashboard = () => {
             )}
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold Php{isNegativeBalance ? 'text-destructive' : 'text-success'}`}>
+            <div className={`text-2xl font-bold ${isNegativeBalance ? 'text-destructive' : 'text-success'}`}>
               Php{budgetSettings.current_balance.toFixed(2)}
             </div>
             {isNegativeBalance && (
