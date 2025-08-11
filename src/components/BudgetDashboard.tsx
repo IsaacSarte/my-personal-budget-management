@@ -141,11 +141,15 @@ const BudgetDashboard = () => {
   };
 
   const addTransaction = async (transaction: Omit<Transaction, "id" | "synced">) => {
+    console.log("Adding transaction:", transaction);
+    
     const newTransaction: Transaction = {
       ...transaction,
       id: crypto.randomUUID(),
       synced: isOnline
     };
+    
+    console.log("New transaction object:", newTransaction);
 
     setTransactions(prev => [newTransaction, ...prev]);
     localStorage.setItem("transactions", JSON.stringify([newTransaction, ...transactions]));
