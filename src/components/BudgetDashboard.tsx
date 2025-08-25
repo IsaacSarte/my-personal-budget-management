@@ -42,6 +42,7 @@ const BudgetDashboard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [showTransactionForm, setShowTransactionForm] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [editingStartingAmount, setEditingStartingAmount] = useState(false);
   const [newStartingAmount, setNewStartingAmount] = useState<string>("");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -323,7 +324,122 @@ const BudgetDashboard = () => {
     }
 
     setShowTransactionForm(false);
-    toast.success("Transaction added!");
+    setEditingTransaction(null);
+    toast.success(editingTransaction ? "Transaction updated!" : "Transaction added!");
+  };
+
+  const updateTransaction = async (updatedData: Omit<Transaction, "id" | "synced">) => {
+    if (!editingTransaction || !user) return;
+    
+    console.log("Updating transaction:", editingTransaction.id, updatedData);
+    
+    const updatedTransaction: Transaction = {
+      ...editingTransaction,
+      ...updatedData,
+      synced: isOnline
+    };
+    
+    const updatedTransactions = transactions.map(t => 
+      t.id === editingTransaction.id ? updatedTransaction : t
+    );
+    setTransactions(updatedTransactions);
+    localStorage.setItem("transactions", JSON.stringify(updatedTransactions));
+
+    // Update balance locally for immediate feedback
+    if (budgetSettings) {
+      const newBalance = calculateNewBalance(updatedTransactions, budgetSettings.starting_amount);
+      const updatedBudgetSettings = {
+        ...budgetSettings,
+        current_balance: newBalance,
+        updated_at: new Date().toISOString()
+      };
+      setBudgetSettings(updatedBudgetSettings);
+      localStorage.setItem("budget_settings", JSON.stringify(updatedBudgetSettings));
+    }
+
+    if (isOnline) {
+      try {
+        const { error } = await supabase
+          .from("transactions")
+          .update({
+            amount: updatedData.amount,
+            description: updatedData.description,
+            category_id: updatedData.category_id,
+            transaction_type: updatedData.transaction_type,
+            transaction_date: updatedData.transaction_date,
+            user_id: user.id
+          })
+          .eq("id", editingTransaction.id)
+          .eq("user_id", user.id);
+          
+        if (error) {
+          console.error("Failed to update transaction:", error);
+          toast.error("Failed to update transaction in database");
+          return;
+        }
+      } catch (error) {
+        console.error("Database error:", error);
+        toast.error("Database connection error");
+        return;
+      }
+    }
+
+    setShowTransactionForm(false);
+    setEditingTransaction(null);
+    toast.success("Transaction updated!");
+  };
+
+  const deleteTransaction = async (transactionId: string) => {
+    if (!user) return;
+    
+    console.log("Deleting transaction:", transactionId);
+    
+    const updatedTransactions = transactions.filter(t => t.id !== transactionId);
+    setTransactions(updatedTransactions);
+    localStorage.setItem("transactions", JSON.stringify(updatedTransactions));
+
+    // Update balance locally for immediate feedback
+    if (budgetSettings) {
+      const newBalance = calculateNewBalance(updatedTransactions, budgetSettings.starting_amount);
+      const updatedBudgetSettings = {
+        ...budgetSettings,
+        current_balance: newBalance,
+        updated_at: new Date().toISOString()
+      };
+      setBudgetSettings(updatedBudgetSettings);
+      localStorage.setItem("budget_settings", JSON.stringify(updatedBudgetSettings));
+    }
+
+    if (isOnline) {
+      try {
+        const { error } = await supabase
+          .from("transactions")
+          .delete()
+          .eq("id", transactionId)
+          .eq("user_id", user.id);
+          
+        if (error) {
+          console.error("Failed to delete transaction:", error);
+          toast.error("Failed to delete transaction from database");
+          // Revert local changes
+          fetchData();
+          return;
+        }
+      } catch (error) {
+        console.error("Database error:", error);
+        toast.error("Database connection error");
+        // Revert local changes
+        fetchData();
+        return;
+      }
+    }
+
+    toast.success("Transaction deleted!");
+  };
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setShowTransactionForm(true);
   };
 
   const isNegativeBalance = budgetSettings && budgetSettings.current_balance < 0;
@@ -461,14 +577,23 @@ const BudgetDashboard = () => {
       </div>
 
       {/* Transactions */}
-      <TransactionList transactions={transactions} categories={categories} />
+      <TransactionList 
+        transactions={transactions} 
+        categories={categories}
+        onEdit={handleEditTransaction}
+        onDelete={deleteTransaction}
+      />
 
       {/* Transaction Form Modal */}
       {showTransactionForm && (
         <TransactionForm
           categories={categories}
-          onSubmit={addTransaction}
-          onClose={() => setShowTransactionForm(false)}
+          editingTransaction={editingTransaction}
+          onSubmit={editingTransaction ? updateTransaction : addTransaction}
+          onClose={() => {
+            setShowTransactionForm(false);
+            setEditingTransaction(null);
+          }}
         />
       )}
     </div>

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowDown, ArrowUp, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowDown, ArrowUp, Clock, Edit2, Trash2 } from "lucide-react";
 
 type Transaction = {
   id: string;
@@ -22,9 +23,11 @@ type Category = {
 type TransactionListProps = {
   transactions: Transaction[];
   categories: Category[];
+  onEdit: (transaction: Transaction) => void;
+  onDelete: (transactionId: string) => void;
 };
 
-const TransactionList = ({ transactions, categories }: TransactionListProps) => {
+const TransactionList = ({ transactions, categories, onEdit, onDelete }: TransactionListProps) => {
   const getCategoryById = (id: string | null) => {
     return categories.find(cat => cat.id === id);
   };
@@ -95,7 +98,7 @@ const TransactionList = ({ transactions, categories }: TransactionListProps) => 
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   {!transaction.synced && (
                     <div title="Pending sync">
                       <Clock className="h-4 w-4 text-warning" />
@@ -104,6 +107,24 @@ const TransactionList = ({ transactions, categories }: TransactionListProps) => 
                   <span className={`font-semibold ${isIncome ? 'text-success' : 'text-destructive'}`}>
                     {isIncome ? '+' : '-'}Php{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(transaction)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(transaction.id)}
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             );

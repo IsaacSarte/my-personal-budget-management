@@ -14,8 +14,19 @@ type Category = {
   icon: string;
 };
 
+type Transaction = {
+  id: string;
+  amount: number;
+  description: string;
+  category_id: string | null;
+  transaction_type: "income" | "expense";
+  transaction_date: string;
+  synced: boolean;
+};
+
 type TransactionFormProps = {
   categories: Category[];
+  editingTransaction?: Transaction;
   onSubmit: (transaction: {
     amount: number;
     description: string;
@@ -26,11 +37,11 @@ type TransactionFormProps = {
   onClose: () => void;
 };
 
-const TransactionForm = ({ categories, onSubmit, onClose }: TransactionFormProps) => {
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [categoryId, setCategoryId] = useState<string>("");
-  const [transactionType, setTransactionType] = useState<"income" | "expense">("expense");
+const TransactionForm = ({ categories, editingTransaction, onSubmit, onClose }: TransactionFormProps) => {
+  const [amount, setAmount] = useState(editingTransaction?.amount.toString() || "");
+  const [description, setDescription] = useState(editingTransaction?.description || "");
+  const [categoryId, setCategoryId] = useState<string>(editingTransaction?.category_id || "");
+  const [transactionType, setTransactionType] = useState<"income" | "expense">(editingTransaction?.transaction_type || "expense");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +70,7 @@ const TransactionForm = ({ categories, onSubmit, onClose }: TransactionFormProps
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Add Transaction</CardTitle>
+          <CardTitle>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -128,7 +139,7 @@ const TransactionForm = ({ categories, onSubmit, onClose }: TransactionFormProps
 
             <div className="flex gap-2 pt-4">
               <Button type="submit" className="flex-1">
-                Add Transaction
+                {editingTransaction ? 'Update Transaction' : 'Add Transaction'}
               </Button>
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
