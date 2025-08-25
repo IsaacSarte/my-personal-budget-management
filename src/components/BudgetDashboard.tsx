@@ -60,7 +60,9 @@ const BudgetDashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    if (user) {
+      fetchData();
+    }
     
     // Set up real-time subscription for budget_settings changes
     const channel = supabase
@@ -84,7 +86,7 @@ const BudgetDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (isOnline) {
@@ -94,6 +96,8 @@ const BudgetDashboard = () => {
 
   const fetchData = async () => {
     console.log("=== FETCHDATA STARTED ===");
+    if (!user) return;
+    
     try {
       console.log("Making API calls...");
       const [settingsRes, transactionsRes, categoriesRes] = await Promise.all([
@@ -114,18 +118,27 @@ const BudgetDashboard = () => {
         setBudgetSettings(settingsRes.data);
         localStorage.setItem("budget_settings", JSON.stringify(settingsRes.data));
       } else {
-        console.log("No budget settings found, creating default");
-        // Create default budget settings if none exist
-        const defaultSettings = {
-          id: crypto.randomUUID(),
-          starting_amount: 0,
-          current_balance: 0,
-          updated_at: new Date().toISOString(),
-          created_at: new Date().toISOString()
-        };
-        console.log("Default settings:", defaultSettings);
-        setBudgetSettings(defaultSettings);
-        localStorage.setItem("budget_settings", JSON.stringify(defaultSettings));
+        console.log("No budget settings found, creating default for user");
+        // Create default budget settings for this user
+        const { data: newSettings, error } = await supabase
+          .from("budget_settings")
+          .insert({
+            starting_amount: 0,
+            current_balance: 0,
+            user_id: user.id
+          })
+          .select()
+          .single();
+          
+        if (error) {
+          console.error("Failed to create budget settings:", error);
+          toast.error("Failed to initialize budget settings");
+          return;
+        }
+        
+        console.log("Created budget settings:", newSettings);
+        setBudgetSettings(newSettings);
+        localStorage.setItem("budget_settings", JSON.stringify(newSettings));
       }
       
       if (transactionsRes.data) {
@@ -137,6 +150,33 @@ const BudgetDashboard = () => {
         console.log("Setting categories:", categoriesRes.data.length, "items");
         setCategories(categoriesRes.data);
         localStorage.setItem("categories", JSON.stringify(categoriesRes.data));
+      } else if (user) {
+        // Create default categories for new users
+        const defaultCategories = [
+          { name: "Food & Dining", color: "#ef4444", icon: "utensils", user_id: user.id },
+          { name: "Transportation", color: "#3b82f6", icon: "car", user_id: user.id },
+          { name: "Shopping", color: "#8b5cf6", icon: "shopping-bag", user_id: user.id },
+          { name: "Entertainment", color: "#f59e0b", icon: "film", user_id: user.id },
+          { name: "Bills & Utilities", color: "#ef4444", icon: "zap", user_id: user.id },
+          { name: "Healthcare", color: "#10b981", icon: "heart", user_id: user.id },
+          { name: "Salary", color: "#22c55e", icon: "dollar-sign", user_id: user.id },
+          { name: "Other", color: "#6b7280", icon: "more-horizontal", user_id: user.id }
+        ];
+        
+        try {
+          const { data: createdCategories, error } = await supabase
+            .from("categories")
+            .insert(defaultCategories)
+            .select();
+            
+          if (!error && createdCategories) {
+            console.log("Created default categories:", createdCategories);
+            setCategories(createdCategories);
+            localStorage.setItem("categories", JSON.stringify(createdCategories));
+          }
+        } catch (error) {
+          console.error("Failed to create default categories:", error);
+        }
       }
       console.log("=== FETCHDATA COMPLETED ===");
     } catch (error) {
@@ -153,15 +193,16 @@ const BudgetDashboard = () => {
         const parsedSettings = JSON.parse(offlineSettings);
         console.log("Setting offline budget settings:", parsedSettings);
         setBudgetSettings(parsedSettings);
-      } else {
+      } else if (user) {
         console.log("No offline settings, creating default");
-        // Create default budget settings if none exist
+        // Create default budget settings if none exist  
         const defaultSettings = {
           id: crypto.randomUUID(),
           starting_amount: 0,
           current_balance: 0,
           updated_at: new Date().toISOString(),
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          user_id: user.id
         };
         console.log("Default offline settings:", defaultSettings);
         setBudgetSettings(defaultSettings);
@@ -179,7 +220,7 @@ const BudgetDashboard = () => {
       try {
         const { error } = await supabase
           .from("transactions")
-          .upsert({ ...transaction, synced: true });
+          .upsert({ ...transaction, synced: true, user_id: user?.id });
         
         if (!error) {
           setTransactions(prev => 
@@ -217,12 +258,13 @@ const BudgetDashboard = () => {
     setBudgetSettings(updatedSettings);
     localStorage.setItem("budget_settings", JSON.stringify(updatedSettings));
 
-    if (isOnline) {
+    if (isOnline && user) {
       try {
         await supabase
           .from("budget_settings")
           .update({ starting_amount: amount })
-          .eq("id", budgetSettings!.id);
+          .eq("id", budgetSettings!.id)
+          .eq("user_id", user.id);
       } catch (error) {
         console.error("Failed to update starting amount:", error);
       }
@@ -260,9 +302,12 @@ const BudgetDashboard = () => {
       localStorage.setItem("budget_settings", JSON.stringify(updatedBudgetSettings));
     }
 
-    if (isOnline) {
+    if (isOnline && user) {
       try {
-        const { error } = await supabase.from("transactions").insert(newTransaction);
+        const { error } = await supabase.from("transactions").insert({
+          ...newTransaction,
+          user_id: user.id
+        });
         if (error) {
           console.error("Failed to insert transaction:", error);
           toast.error("Failed to save transaction to database");

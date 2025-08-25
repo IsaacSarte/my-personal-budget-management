@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -21,6 +21,7 @@ export type Database = {
           id: string
           starting_amount: number
           updated_at: string
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           starting_amount?: number
           updated_at?: string
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           starting_amount?: number
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -45,6 +48,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          user_id: string
         }
         Insert: {
           color?: string
@@ -52,6 +56,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          user_id: string
         }
         Update: {
           color?: string
@@ -59,6 +64,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -93,6 +99,7 @@ export type Database = {
           synced: boolean | null
           transaction_date: string
           transaction_type: string
+          user_id: string
         }
         Insert: {
           amount: number
@@ -103,6 +110,7 @@ export type Database = {
           synced?: boolean | null
           transaction_date?: string
           transaction_type: string
+          user_id: string
         }
         Update: {
           amount?: number
@@ -113,6 +121,7 @@ export type Database = {
           synced?: boolean | null
           transaction_date?: string
           transaction_type?: string
+          user_id?: string
         }
         Relationships: [
           {
