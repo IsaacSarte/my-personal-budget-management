@@ -259,17 +259,28 @@ const BudgetDashboard = () => {
     setBudgetSettings(updatedSettings);
     localStorage.setItem("budget_settings", JSON.stringify(updatedSettings));
 
-    if (isOnline && user) {
-      try {
-        await supabase
-          .from("budget_settings")
-          .update({ starting_amount: amount })
-          .eq("id", budgetSettings!.id)
-          .eq("user_id", user.id);
-      } catch (error) {
+  if (isOnline && user) {
+    try {
+      const { error } = await supabase
+        .from("budget_settings")
+        .update({ 
+          starting_amount: amount,
+          current_balance: newBalance 
+        })
+        .eq("id", budgetSettings!.id)
+        .eq("user_id", user.id);
+        
+      if (error) {
         console.error("Failed to update starting amount:", error);
+        toast.error("Failed to save starting amount");
+        return;
       }
+    } catch (error) {
+      console.error("Failed to update starting amount:", error);
+      toast.error("Failed to save starting amount");
+      return;
     }
+  }
 
     setEditingStartingAmount(false);
     setNewStartingAmount("");
