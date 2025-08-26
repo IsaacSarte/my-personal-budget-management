@@ -216,6 +216,26 @@ const BudgetDashboard = () => {
 
   const syncOfflineData = async () => {
     const unsyncedTransactions = transactions.filter(t => !t.synced);
+
+    // Sync pending starting amount if any
+    if (isOnline && user) {
+      const pending = localStorage.getItem("pending_starting_amount");
+      if (pending && budgetSettings) {
+        try {
+          const { amount } = JSON.parse(pending) as { amount: number };
+          const { error } = await supabase
+            .from("budget_settings")
+            .update({ starting_amount: amount })
+            .eq("id", budgetSettings.id)
+            .eq("user_id", user.id);
+          if (!error) {
+            localStorage.removeItem("pending_starting_amount");
+          }
+        } catch (error) {
+          console.error("Failed to sync starting amount:", error);
+        }
+      }
+    }
     
     for (const transaction of unsyncedTransactions) {
       try {
@@ -258,7 +278,14 @@ const BudgetDashboard = () => {
 
     setBudgetSettings(updatedSettings);
     localStorage.setItem("budget_settings", JSON.stringify(updatedSettings));
-
+    // If offline, queue this update for later sync
+    if (!isOnline) {
+      localStorage.setItem("pending_starting_amount", JSON.stringify({
+        amount,
+        updated_at: new Date().toISOString()
+      }));
+    }
+  
   if (isOnline && user) {
     try {
       const { error } = await supabase
