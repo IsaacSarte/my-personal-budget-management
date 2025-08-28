@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit2, Trash2, ChevronRight, ChevronDown } from "lucide-react";
+import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Settings } from "lucide-react";
 import { useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 type Category = {
   id: string;
@@ -20,9 +21,10 @@ type CategoryListProps = {
 };
 
 const CategoryList = ({ categories, onAdd, onEdit, onDelete }: CategoryListProps) => {
+  const [isManagementOpen, setIsManagementOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
-  // Organize categories into hierarchy
+  // Organize categories into hierarchy for management section
   const rootCategories = categories.filter(cat => !cat.parent_id);
   const subCategories = categories.filter(cat => cat.parent_id);
 
@@ -40,7 +42,7 @@ const CategoryList = ({ categories, onAdd, onEdit, onDelete }: CategoryListProps
     setExpandedCategories(newExpanded);
   };
 
-  const CategoryItem = ({ category, isSubCategory = false }: { category: Category; isSubCategory?: boolean }) => {
+  const CategoryManagementItem = ({ category, isSubCategory = false }: { category: Category; isSubCategory?: boolean }) => {
     const subCats = getSubCategories(category.id);
     const hasSubCategories = subCats.length > 0;
     const isExpanded = expandedCategories.has(category.id);
@@ -102,7 +104,7 @@ const CategoryList = ({ categories, onAdd, onEdit, onDelete }: CategoryListProps
         {hasSubCategories && isExpanded && (
           <div className="mt-2 space-y-2">
             {subCats.map((subCat) => (
-              <CategoryItem 
+              <CategoryManagementItem 
                 key={subCat.id} 
                 category={subCat} 
                 isSubCategory={true} 
@@ -116,25 +118,78 @@ const CategoryList = ({ categories, onAdd, onEdit, onDelete }: CategoryListProps
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader>
         <CardTitle>Categories</CardTitle>
-        <Button size="sm" onClick={onAdd}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Category
-        </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Simple category display */}
         {categories.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            No categories yet. Add your first category to get started!
+          <p className="text-center text-muted-foreground py-4">
+            No categories yet. Manage categories below to get started!
           </p>
         ) : (
-          <div className="space-y-3">
-            {rootCategories.map((category) => (
-              <CategoryItem key={category.id} category={category} />
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <Badge 
+                key={category.id} 
+                variant="secondary" 
+                className="flex items-center gap-2 px-3 py-1"
+              >
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: category.color }}
+                />
+                {category.name}
+                {category.parent_id && (
+                  <span className="text-xs opacity-60">
+                    (sub)
+                  </span>
+                )}
+              </Badge>
             ))}
           </div>
         )}
+
+        {/* Collapsible management section */}
+        <Collapsible open={isManagementOpen} onOpenChange={setIsManagementOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Manage Categories
+              </div>
+              {isManagementOpen ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="space-y-4 mt-4">
+            {/* Add button */}
+            <div className="flex justify-center">
+              <Button onClick={onAdd} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Category
+              </Button>
+            </div>
+
+            {/* Management list */}
+            {categories.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                No categories to manage yet.
+              </p>
+            ) : (
+              <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
+                <h4 className="font-medium text-sm text-muted-foreground mb-3">Category Management</h4>
+                {rootCategories.map((category) => (
+                  <CategoryManagementItem key={category.id} category={category} />
+                ))}
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
     </Card>
   );
