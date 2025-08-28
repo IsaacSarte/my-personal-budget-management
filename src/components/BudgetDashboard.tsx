@@ -487,37 +487,41 @@ const BudgetDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">MyDailyLife Budget</h1>
-          <div className="flex items-center gap-2 mt-2">
+    <div className="container mx-auto p-4 space-y-6 max-w-7xl">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">MyDailyLife Budget</h1>
+          <div className="flex items-center gap-2">
             <Badge variant={isOnline ? "default" : "destructive"}>
               {isOnline ? "Online" : "Offline"}
             </Badge>
             {!isOnline && (
-              <p className="text-sm text-muted-foreground">Changes will sync when back online</p>
+              <p className="text-sm text-muted-foreground hidden sm:block">Changes will sync when back online</p>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground order-2 sm:order-1">
             <User className="h-4 w-4" />
-            <span>{user?.email}</span>
+            <span className="truncate max-w-[200px]">{user?.email}</span>
           </div>
-          <Button onClick={() => setShowTransactionForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Transaction
-          </Button>
-          <Button variant="outline" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex gap-2 order-1 sm:order-2">
+            <Button onClick={() => setShowTransactionForm(true)} className="flex-1 sm:flex-none">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Add Transaction</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+            <Button variant="outline" onClick={signOut} className="flex-1 sm:flex-none">
+              <LogOut className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Sign Out</span>
+              <span className="sm:hidden">Out</span>
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Balance Overview */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Starting Amount</CardTitle>
@@ -607,7 +611,7 @@ const BudgetDashboard = () => {
       {/* Navigation */}
       <div className="flex justify-center">
         <Link to="/monthly-history">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 w-full sm:w-auto">
             <History className="h-4 w-4" />
             View Monthly History
           </Button>

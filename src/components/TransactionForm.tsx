@@ -68,7 +68,7 @@ const TransactionForm = ({ categories, editingTransaction, onSubmit, onClose }: 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -137,11 +137,11 @@ const TransactionForm = ({ categories, editingTransaction, onSubmit, onClose }: 
               </Select>
             </div>
 
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1">
+            <div className="flex flex-col gap-2 pt-4 sm:flex-row">
+              <Button type="submit" className="flex-1 order-2 sm:order-1">
                 {editingTransaction ? 'Update Transaction' : 'Add Transaction'}
               </Button>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} className="order-1 sm:order-2">
                 Cancel
               </Button>
             </div>

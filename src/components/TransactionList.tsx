@@ -68,7 +68,7 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete }: Transac
             const isIncome = transaction.transaction_type === "income";
             
             return (
-              <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
+              <div key={transaction.id} className="flex flex-col gap-3 p-4 border rounded-lg sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-full ${isIncome ? 'bg-success/10' : 'bg-destructive/10'}`}>
                     {isIncome ? (
@@ -78,19 +78,19 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete }: Transac
                     )}
                   </div>
                   
-                  <div>
-                    <p className="font-medium">{transaction.description}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>{formatDate(transaction.transaction_date)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{transaction.description}</p>
+                    <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-2">
+                      <span className="whitespace-nowrap">{formatDate(transaction.transaction_date)}</span>
                       {category && (
                         <>
-                          <span>•</span>
+                          <span className="hidden sm:block">•</span>
                           <div className="flex items-center gap-1">
                             <div 
-                              className="w-2 h-2 rounded-full" 
+                              className="w-2 h-2 rounded-full flex-shrink-0" 
                               style={{ backgroundColor: category.color }}
                             />
-                            {category.name}
+                            <span className="truncate">{category.name}</span>
                           </div>
                         </>
                       )}
@@ -98,31 +98,34 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete }: Transac
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  {!transaction.synced && (
-                    <div title="Pending sync">
-                      <Clock className="h-4 w-4 text-warning" />
-                    </div>
-                  )}
-                  <span className={`font-semibold ${isIncome ? 'text-success' : 'text-destructive'}`}>
-                    {isIncome ? '+' : '-'}Php{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                  <div className="flex gap-1">
+                <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end lg:flex-row lg:items-center">
+                  <div className="flex items-center gap-2">
+                    {!transaction.synced && (
+                      <div title="Pending sync">
+                        <Clock className="h-4 w-4 text-warning" />
+                      </div>
+                    )}
+                    <span className={`font-semibold text-lg sm:text-base ${isIncome ? 'text-success' : 'text-destructive'}`}>
+                      {isIncome ? '+' : '-'}Php{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onEdit(transaction)}
-                      className="h-8 w-8 p-0"
+                      className="h-9 w-9 p-0"
                     >
-                      <Edit2 className="h-3 w-3" />
+                      <Edit2 className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onDelete(transaction.id)}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      className="h-9 w-9 p-0 text-destructive hover:text-destructive"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
