@@ -167,27 +167,29 @@ const CategoryList = ({ categories, onAdd, onEdit, onDelete }: CategoryListProps
           </CollapsibleTrigger>
           
           <CollapsibleContent className="space-y-4 mt-4">
-            {/* Add button */}
-            <div className="flex justify-center">
-              <Button onClick={onAdd} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Category
-              </Button>
-            </div>
-
-            {/* Management list */}
-            {categories.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">
-                No categories to manage yet.
-              </p>
-            ) : (
-              <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
-                <h4 className="font-medium text-sm text-muted-foreground mb-3">Category Management</h4>
-                {rootCategories.map((category) => (
-                  <CategoryManagementItem key={category.id} category={category} />
-                ))}
+            {/* Management section with Add button always visible */}
+            <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-sm text-muted-foreground">Category Management</h4>
+                <Button size="sm" onClick={onAdd} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Add Category</span>
+                  <span className="sm:hidden">Add</span>
+                </Button>
               </div>
-            )}
+              
+              {categories.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">
+                  No categories to manage yet.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {rootCategories.map((category) => (
+                    <CategoryManagementItem key={category.id} category={category} />
+                  ))}
+                </div>
+              )}
+            </div>
           </CollapsibleContent>
         </Collapsible>
       </CardContent>
