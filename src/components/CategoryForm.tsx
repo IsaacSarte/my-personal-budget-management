@@ -92,12 +92,12 @@ const CategoryForm = ({ categories, editingCategory, onSubmit, onClose }: Catego
 
             <div className="space-y-2">
               <Label htmlFor="parent">Parent Category (Optional)</Label>
-              <Select value={parentId} onValueChange={setParentId}>
+              <Select value={parentId || "none"} onValueChange={(value) => setParentId(value === "none" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select parent category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None (Root Category)</SelectItem>
+                  <SelectItem value="none">None (Root Category)</SelectItem>
                   {rootCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       <div className="flex items-center gap-2">
