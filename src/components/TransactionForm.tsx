@@ -12,6 +12,7 @@ type Category = {
   name: string;
   color: string;
   icon: string;
+  parent_id: string | null;
 };
 
 type Transaction = {
@@ -122,7 +123,9 @@ const TransactionForm = ({ categories, editingTransaction, onSubmit, onClose }: 
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {categories
+                    .filter(category => !category.parent_id) // Show only root categories
+                    .map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       <div className="flex items-center gap-2">
                         <div 
@@ -133,6 +136,22 @@ const TransactionForm = ({ categories, editingTransaction, onSubmit, onClose }: 
                       </div>
                     </SelectItem>
                   ))}
+                  {categories
+                    .filter(category => category.parent_id) // Show sub-categories indented
+                    .map((category) => {
+                      const parent = categories.find(c => c.id === category.parent_id);
+                      return (
+                        <SelectItem key={category.id} value={category.id}>
+                          <div className="flex items-center gap-2 pl-4">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: category.color }}
+                            />
+                            {parent?.name} → {category.name}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
             </div>

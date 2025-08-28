@@ -18,6 +18,7 @@ type Category = {
   name: string;
   color: string;
   icon: string;
+  parent_id: string | null;
 };
 
 type TransactionListProps = {

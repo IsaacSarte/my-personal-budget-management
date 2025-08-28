@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import TransactionForm from "./TransactionForm";
 import TransactionList from "./TransactionList";
 import CategoryList from "./CategoryList";
+import CategoryForm from "./CategoryForm";
 
 type BudgetSettings = {
   id: string;
@@ -34,6 +35,7 @@ type Category = {
   name: string;
   color: string;
   icon: string;
+  parent_id: string | null;
 };
 
 const BudgetDashboard = () => {
@@ -42,7 +44,9 @@ const BudgetDashboard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [showTransactionForm, setShowTransactionForm] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingStartingAmount, setEditingStartingAmount] = useState(false);
   const [newStartingAmount, setNewStartingAmount] = useState<string>("");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -154,14 +158,14 @@ const BudgetDashboard = () => {
       } else if (user) {
         // Create default categories for new users
         const defaultCategories = [
-          { name: "Food & Dining", color: "#ef4444", icon: "utensils", user_id: user.id },
-          { name: "Transportation", color: "#3b82f6", icon: "car", user_id: user.id },
-          { name: "Shopping", color: "#8b5cf6", icon: "shopping-bag", user_id: user.id },
-          { name: "Entertainment", color: "#f59e0b", icon: "film", user_id: user.id },
-          { name: "Bills & Utilities", color: "#ef4444", icon: "zap", user_id: user.id },
-          { name: "Healthcare", color: "#10b981", icon: "heart", user_id: user.id },
-          { name: "Salary", color: "#22c55e", icon: "dollar-sign", user_id: user.id },
-          { name: "Other", color: "#6b7280", icon: "more-horizontal", user_id: user.id }
+          { name: "Food & Dining", color: "#ef4444", icon: "utensils", user_id: user.id, parent_id: null },
+          { name: "Transportation", color: "#3b82f6", icon: "car", user_id: user.id, parent_id: null },
+          { name: "Shopping", color: "#8b5cf6", icon: "shopping-bag", user_id: user.id, parent_id: null },
+          { name: "Entertainment", color: "#f59e0b", icon: "film", user_id: user.id, parent_id: null },
+          { name: "Bills & Utilities", color: "#ef4444", icon: "zap", user_id: user.id, parent_id: null },
+          { name: "Healthcare", color: "#10b981", icon: "heart", user_id: user.id, parent_id: null },
+          { name: "Salary", color: "#22c55e", icon: "dollar-sign", user_id: user.id, parent_id: null },
+          { name: "Other", color: "#6b7280", icon: "more-horizontal", user_id: user.id, parent_id: null }
         ];
         
         try {
@@ -314,7 +318,146 @@ const BudgetDashboard = () => {
     toast.success("Starting amount updated!");
   };
 
-  const addTransaction = async (transaction: Omit<Transaction, "id" | "synced">) => {
+  const addCategory = async (category: Omit<Category, "id">) => {
+    console.log("Adding category:", category);
+    
+    const newCategory: Category = {
+      ...category,
+      id: crypto.randomUUID(),
+    };
+    
+    console.log("New category object:", newCategory);
+
+    const updatedCategories = [...categories, newCategory];
+    setCategories(updatedCategories);
+    localStorage.setItem("categories", JSON.stringify(updatedCategories));
+
+    if (isOnline && user) {
+      try {
+        const { error } = await supabase.from("categories").insert({
+          ...newCategory,
+          user_id: user.id
+        });
+        if (error) {
+          console.error("Failed to insert category:", error);
+          toast.error("Failed to save category to database");
+          return;
+        }
+      } catch (error) {
+        console.error("Database error:", error);
+        toast.error("Database connection error");
+        return;
+      }
+    }
+
+    setShowCategoryForm(false);
+    setEditingCategory(null);
+    toast.success(editingCategory ? "Category updated!" : "Category added!");
+  };
+
+  const updateCategory = async (updatedData: Omit<Category, "id">) => {
+    if (!editingCategory || !user) return;
+    
+    console.log("Updating category:", editingCategory.id, updatedData);
+    
+    const updatedCategory: Category = {
+      ...editingCategory,
+      ...updatedData,
+    };
+    
+    const updatedCategories = categories.map(c => 
+      c.id === editingCategory.id ? updatedCategory : c
+    );
+    setCategories(updatedCategories);
+    localStorage.setItem("categories", JSON.stringify(updatedCategories));
+
+    if (isOnline) {
+      try {
+        const { error } = await supabase
+          .from("categories")
+          .update({
+            name: updatedData.name,
+            color: updatedData.color,
+            icon: updatedData.icon,
+            parent_id: updatedData.parent_id,
+            user_id: user.id
+          })
+          .eq("id", editingCategory.id)
+          .eq("user_id", user.id);
+          
+        if (error) {
+          console.error("Failed to update category:", error);
+          toast.error("Failed to update category in database");
+          return;
+        }
+      } catch (error) {
+        console.error("Database error:", error);
+        toast.error("Database connection error");
+        return;
+      }
+    }
+
+    setShowCategoryForm(false);
+    setEditingCategory(null);
+    toast.success("Category updated!");
+  };
+
+  const deleteCategory = async (categoryId: string) => {
+    if (!user) return;
+    
+    console.log("Deleting category:", categoryId);
+    
+    // Check if category has sub-categories
+    const hasSubCategories = categories.some(c => c.parent_id === categoryId);
+    if (hasSubCategories) {
+      toast.error("Cannot delete category with sub-categories. Delete sub-categories first.");
+      return;
+    }
+
+    // Check if category is used in transactions
+    const categoryInUse = transactions.some(t => t.category_id === categoryId);
+    if (categoryInUse) {
+      toast.error("Cannot delete category that is used in transactions.");
+      return;
+    }
+    
+    const updatedCategories = categories.filter(c => c.id !== categoryId);
+    setCategories(updatedCategories);
+    localStorage.setItem("categories", JSON.stringify(updatedCategories));
+
+    if (isOnline) {
+      try {
+        const { error } = await supabase
+          .from("categories")
+          .delete()
+          .eq("id", categoryId)
+          .eq("user_id", user.id);
+          
+        if (error) {
+          console.error("Failed to delete category:", error);
+          toast.error("Failed to delete category from database");
+          // Revert local changes
+          fetchData();
+          return;
+        }
+      } catch (error) {
+        console.error("Database error:", error);
+        toast.error("Database connection error");
+        // Revert local changes
+        fetchData();
+        return;
+      }
+    }
+
+    toast.success("Category deleted!");
+  };
+
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setShowCategoryForm(true);
+  };
+
+  const handleAddTransaction = async (transaction: Omit<Transaction, "id" | "synced">) => {
     console.log("Adding transaction:", transaction);
     
     const newTransaction: Transaction = {
@@ -606,7 +749,12 @@ const BudgetDashboard = () => {
       </div>
 
       {/* Categories */}
-      <CategoryList categories={categories} />
+      <CategoryList 
+        categories={categories}
+        onAdd={() => setShowCategoryForm(true)}
+        onEdit={handleEditCategory}
+        onDelete={deleteCategory}
+      />
 
       {/* Navigation */}
       <div className="flex justify-center">
@@ -631,10 +779,23 @@ const BudgetDashboard = () => {
         <TransactionForm
           categories={categories}
           editingTransaction={editingTransaction}
-          onSubmit={editingTransaction ? updateTransaction : addTransaction}
+          onSubmit={editingTransaction ? updateTransaction : handleAddTransaction}
           onClose={() => {
             setShowTransactionForm(false);
             setEditingTransaction(null);
+          }}
+        />
+      )}
+
+      {/* Category Form Modal */}
+      {showCategoryForm && (
+        <CategoryForm
+          categories={categories}
+          editingCategory={editingCategory}
+          onSubmit={editingCategory ? updateCategory : addCategory}
+          onClose={() => {
+            setShowCategoryForm(false);
+            setEditingCategory(null);
           }}
         />
       )}
