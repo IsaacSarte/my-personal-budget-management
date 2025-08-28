@@ -134,14 +134,14 @@ const MonthlyHistory = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 sm:mb-8">
             <Link to="/">
               <Button variant="outline" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold">Monthly History</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Monthly History</h1>
           </div>
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -155,14 +155,14 @@ const MonthlyHistory = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 sm:mb-8">
           <Link to="/">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold">Monthly History</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Monthly History</h1>
         </div>
 
         {monthlyData.length === 0 ? (
@@ -177,12 +177,12 @@ const MonthlyHistory = () => {
             {monthlyData.map((monthData, index) => (
               <Card key={`${monthData.year}-${monthData.month}`} className="overflow-hidden">
                 <CardHeader className="bg-muted/50">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                     <CardTitle className="flex items-center gap-2">
                       <Calendar className="h-5 w-5" />
                       {monthData.month} {monthData.year}
                     </CardTitle>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                       <Badge variant={monthData.netAmount >= 0 ? "default" : "destructive"}>
                         {monthData.netAmount >= 0 ? (
                           <TrendingUp className="h-3 w-3 mr-1" />
@@ -191,7 +191,7 @@ const MonthlyHistory = () => {
                         )}
                         {formatCurrency(Math.abs(monthData.netAmount))}
                       </Badge>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         <p className="text-sm text-muted-foreground">Ending Balance</p>
                         <p className="font-semibold">{formatCurrency(monthData.endingBalance)}</p>
                       </div>
@@ -200,18 +200,18 @@ const MonthlyHistory = () => {
                 </CardHeader>
                 
                 <CardContent className="pt-6">
-                  <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="text-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div className="text-center sm:text-center">
                       <p className="text-sm text-muted-foreground mb-1">Income</p>
-                      <p className="font-semibold text-green-600">{formatCurrency(monthData.totalIncome)}</p>
+                      <p className="font-semibold text-green-600 text-lg sm:text-base">{formatCurrency(monthData.totalIncome)}</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center sm:text-center">
                       <p className="text-sm text-muted-foreground mb-1">Expenses</p>
-                      <p className="font-semibold text-red-600">{formatCurrency(monthData.totalExpenses)}</p>
+                      <p className="font-semibold text-red-600 text-lg sm:text-base">{formatCurrency(monthData.totalExpenses)}</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center sm:text-center">
                       <p className="text-sm text-muted-foreground mb-1">Transactions</p>
-                      <p className="font-semibold">{monthData.transactions.length}</p>
+                      <p className="font-semibold text-lg sm:text-base">{monthData.transactions.length}</p>
                     </div>
                   </div>
 
@@ -222,30 +222,32 @@ const MonthlyHistory = () => {
                       return (
                         <div
                           key={transaction.id}
-                          className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 bg-muted/30 rounded-lg"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <div className="flex items-center gap-2 min-w-0">
                               {category && (
                                 <div
-                                  className="w-3 h-3 rounded-full"
+                                  className="w-3 h-3 rounded-full flex-shrink-0"
                                   style={{ backgroundColor: category.color }}
                                 />
                               )}
-                              <span className="font-medium">{transaction.description}</span>
+                              <span className="font-medium truncate">{transaction.description}</span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                              {format(parseISO(transaction.transaction_date), "MMM dd")}
-                            </span>
-                            {category && (
-                              <Badge variant="outline" className="text-xs">
-                                {category.name}
-                              </Badge>
-                            )}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {format(parseISO(transaction.transaction_date), "MMM dd")}
+                              </span>
+                              {category && (
+                                <Badge variant="outline" className="text-xs flex-shrink-0">
+                                  {category.name}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-left sm:text-right flex-shrink-0">
                             <span
-                              className={`font-semibold ${
+                              className={`font-semibold text-base ${
                                 transaction.transaction_type === "income"
                                   ? "text-green-600"
                                   : "text-red-600"
