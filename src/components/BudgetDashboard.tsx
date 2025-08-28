@@ -12,7 +12,7 @@ import TransactionForm from "./TransactionForm";
 import TransactionList from "./TransactionList";
 import CategoryList from "./CategoryList";
 import CategoryForm from "./CategoryForm";
-import bunnyLoadingGif from '@/assets/bunny-loading.gif';
+import BouncingDots from './BouncingDots';
 
 type BudgetSettings = {
   id: string;
@@ -629,16 +629,7 @@ const BudgetDashboard = () => {
   if (!budgetSettings) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4 animate-fade-in">
-          <img 
-            src={bunnyLoadingGif} 
-            alt="Loading..." 
-            className="w-20 h-20 rounded-lg"
-          />
-          <p className="text-sm text-muted-foreground animate-pulse">
-            Setting up your budget...
-          </p>
-        </div>
+        <BouncingDots text="Setting up your budget..." />
       </div>
     );
   }
