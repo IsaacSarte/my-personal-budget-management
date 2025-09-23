@@ -51,8 +51,7 @@ const BudgetDashboard = () => {
   const [editingStartingAmount, setEditingStartingAmount] = useState(false);
   const [newStartingAmount, setNewStartingAmount] = useState<string>("");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalTransactions, setTotalTransactions] = useState(0);
+  const [visibleTransactionCount, setVisibleTransactionCount] = useState(10);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -95,7 +94,7 @@ const BudgetDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, currentPage]);
+  }, [user]);
 
   useEffect(() => {
     if (isOnline) {
@@ -109,25 +108,11 @@ const BudgetDashboard = () => {
     
     try {
       console.log("Making API calls...");
-      
-      // Get total count first
-      const { count } = await supabase
-        .from("transactions")
-        .select("*", { count: 'exact', head: true });
-      
       const [settingsRes, transactionsRes, categoriesRes] = await Promise.all([
         supabase.from("budget_settings").select("*").maybeSingle(),
-        supabase
-          .from("transactions")
-          .select("*")
-          .order("transaction_date", { ascending: false })
-          .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1),
+        supabase.from("transactions").select("*").order("transaction_date", { ascending: false }),
         supabase.from("categories").select("*").order("name")
       ]);
-      
-      if (count !== null) {
-        setTotalTransactions(count);
-      }
 
       console.log("=== API RESPONSES ===");
       console.log("Settings response:", settingsRes);
@@ -488,7 +473,7 @@ const BudgetDashboard = () => {
 
     const updatedTransactions = [newTransaction, ...transactions];
     setTransactions(updatedTransactions);
-    setCurrentPage(1); // Reset to first page to show new transaction
+    setVisibleTransactionCount(10); // Reset to show initial amount
     localStorage.setItem("transactions", JSON.stringify(updatedTransactions));
 
     // Update balance locally for immediate feedback
@@ -641,6 +626,12 @@ const BudgetDashboard = () => {
     setEditingTransaction(transaction);
     setShowTransactionForm(true);
   };
+
+  const handleLoadMoreTransactions = () => {
+    setVisibleTransactionCount(prev => Math.min(prev + itemsPerPage, transactions.length));
+  };
+
+  const hasMoreTransactions = visibleTransactionCount < transactions.length;
 
   const isNegativeBalance = budgetSettings && budgetSettings.current_balance < 0;
 
@@ -795,9 +786,9 @@ const BudgetDashboard = () => {
         categories={categories}
         onEdit={handleEditTransaction}
         onDelete={deleteTransaction}
-        currentPage={currentPage}
-        totalPages={Math.ceil(totalTransactions / itemsPerPage)}
-        onPageChange={(page) => setCurrentPage(page)}
+        visibleCount={visibleTransactionCount}
+        onLoadMore={handleLoadMoreTransactions}
+        hasMore={hasMoreTransactions}
       />
 
       {/* Transaction Form Modal */}

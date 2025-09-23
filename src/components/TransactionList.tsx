@@ -2,14 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, ArrowUp, Clock, Edit2, Trash2 } from "lucide-react";
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious 
-} from "@/components/ui/pagination";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect, useRef } from "react";
 
 type Transaction = {
   id: string;
@@ -34,12 +28,22 @@ type TransactionListProps = {
   categories: Category[];
   onEdit: (transaction: Transaction) => void;
   onDelete: (transactionId: string) => void;
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
+  visibleCount: number;
+  onLoadMore: () => void;
+  hasMore: boolean;
 };
 
-const TransactionList = ({ transactions, categories, onEdit, onDelete, currentPage, totalPages, onPageChange }: TransactionListProps) => {
+const TransactionList = ({ transactions, categories, onEdit, onDelete, visibleCount, onLoadMore, hasMore }: TransactionListProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 10 && hasMore) {
+      onLoadMore();
+    }
+  };
+  const visibleTransactions = transactions.slice(0, visibleCount);
+
   const getCategoryById = (id: string | null) => {
     return categories.find(cat => cat.id === id);
   };
@@ -73,9 +77,13 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete, currentPa
       <CardHeader>
         <CardTitle>Recent Transactions</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {transactions.map((transaction) => {
+      <CardContent className="p-0">
+        <ScrollArea 
+          className="h-[600px]" 
+          onScrollCapture={handleScroll}
+        >
+          <div className="space-y-4 p-6">
+            {visibleTransactions.map((transaction) => {
             const category = getCategoryById(transaction.category_id);
             const isIncome = transaction.transaction_type === "income";
             
@@ -144,41 +152,14 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete, currentPa
               </div>
             );
           })}
+          
+          {hasMore && (
+            <div className="flex justify-center py-4">
+              <div className="text-sm text-muted-foreground">Scroll for more transactions...</div>
+            </div>
+          )}
         </div>
-        
-        {totalPages > 1 && (
-          <div className="mt-6">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      onClick={() => onPageChange(page)}
-                      isActive={page === currentPage}
-                      className="cursor-pointer"
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
+        </ScrollArea>
       </CardContent>
     </Card>
   );
