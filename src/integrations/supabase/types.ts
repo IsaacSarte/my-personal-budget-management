@@ -17,6 +17,7 @@ export type Database = {
       accounts: {
         Row: {
           account_number: string
+          account_type: string
           created_at: string
           id: string
           label: string
@@ -25,6 +26,7 @@ export type Database = {
         }
         Insert: {
           account_number: string
+          account_type?: string
           created_at?: string
           id?: string
           label: string
@@ -33,6 +35,7 @@ export type Database = {
         }
         Update: {
           account_number?: string
+          account_type?: string
           created_at?: string
           id?: string
           label?: string

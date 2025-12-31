@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Eye, EyeOff, CreditCard, Plus, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, CreditCard, Plus, Pencil, Trash2, Wallet, Landmark, Smartphone, PiggyBank, Receipt, MoreHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,12 +24,35 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type AccountType = "savings" | "credit_card" | "e_wallet" | "checking" | "bills" | "other";
 
 type Account = {
   id: string;
   label: string;
   account_number: string;
+  account_type: AccountType;
   user_id: string;
+};
+
+const accountTypes: { value: AccountType; label: string; icon: typeof CreditCard; color: string }[] = [
+  { value: "savings", label: "Savings", icon: PiggyBank, color: "bg-emerald-500" },
+  { value: "credit_card", label: "Credit Card", icon: CreditCard, color: "bg-blue-500" },
+  { value: "e_wallet", label: "E-Wallet", icon: Smartphone, color: "bg-purple-500" },
+  { value: "checking", label: "Checking", icon: Landmark, color: "bg-amber-500" },
+  { value: "bills", label: "Bills", icon: Receipt, color: "bg-rose-500" },
+  { value: "other", label: "Other", icon: MoreHorizontal, color: "bg-slate-500" },
+];
+
+const getAccountTypeConfig = (type: AccountType) => {
+  return accountTypes.find(t => t.value === type) || accountTypes[accountTypes.length - 1];
 };
 
 const Accounts = () => {
@@ -48,6 +71,7 @@ const Accounts = () => {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [formLabel, setFormLabel] = useState("");
   const [formAccountNumber, setFormAccountNumber] = useState("");
+  const [formAccountType, setFormAccountType] = useState<AccountType>("other");
   const [isSaving, setIsSaving] = useState(false);
   
   // Delete state
@@ -67,7 +91,7 @@ const Accounts = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setAccounts(data || []);
+      setAccounts((data as Account[]) || []);
     } catch (error) {
       console.error("Failed to fetch accounts:", error);
       toast.error("Failed to load accounts");
@@ -122,6 +146,7 @@ const Accounts = () => {
     setEditingAccount(null);
     setFormLabel("");
     setFormAccountNumber("");
+    setFormAccountType("other");
     setShowForm(true);
   };
 
@@ -129,6 +154,7 @@ const Accounts = () => {
     setEditingAccount(account);
     setFormLabel(account.label);
     setFormAccountNumber(account.account_number);
+    setFormAccountType(account.account_type || "other");
     setShowForm(true);
   };
 
@@ -137,6 +163,7 @@ const Accounts = () => {
     setEditingAccount(null);
     setFormLabel("");
     setFormAccountNumber("");
+    setFormAccountType("other");
   };
 
   const handleSubmit = async () => {
@@ -159,6 +186,7 @@ const Accounts = () => {
           .update({
             label: formLabel.trim(),
             account_number: formAccountNumber.trim(),
+            account_type: formAccountType,
           })
           .eq("id", editingAccount.id)
           .eq("user_id", user.id);
@@ -168,7 +196,7 @@ const Accounts = () => {
         setAccounts(prev =>
           prev.map(a =>
             a.id === editingAccount.id
-              ? { ...a, label: formLabel.trim(), account_number: formAccountNumber.trim() }
+              ? { ...a, label: formLabel.trim(), account_number: formAccountNumber.trim(), account_type: formAccountType }
               : a
           )
         );
@@ -179,6 +207,7 @@ const Accounts = () => {
           .insert({
             label: formLabel.trim(),
             account_number: formAccountNumber.trim(),
+            account_type: formAccountType,
             user_id: user.id,
           })
           .select()
@@ -186,7 +215,7 @@ const Accounts = () => {
 
         if (error) throw error;
 
-        setAccounts(prev => [data, ...prev]);
+        setAccounts(prev => [data as Account, ...prev]);
         toast.success("Account added!");
       }
 
@@ -244,7 +273,7 @@ const Accounts = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <CreditCard className="h-5 w-5" />
+              <Wallet className="h-5 w-5" />
               My Accounts
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={handleShowClick}>
@@ -272,43 +301,53 @@ const Accounts = () => {
               </p>
             ) : (
               <div className="space-y-4">
-                {accounts.map((account) => (
-                  <div
-                    key={account.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border bg-card gap-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <CreditCard className="h-5 w-5 text-primary" />
+                {accounts.map((account) => {
+                  const typeConfig = getAccountTypeConfig(account.account_type);
+                  const IconComponent = typeConfig.icon;
+                  
+                  return (
+                    <div
+                      key={account.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border bg-card gap-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`h-10 w-10 rounded-full ${typeConfig.color} flex items-center justify-center flex-shrink-0`}>
+                          <IconComponent className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm md:text-base truncate">
+                              {account.label}
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                              {typeConfig.label}
+                            </span>
+                          </div>
+                          <span className="font-mono text-xs md:text-sm text-muted-foreground">
+                            {isUnlocked ? account.account_number : maskAccountNumber(account.account_number)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <span className="font-medium text-sm md:text-base block truncate">
-                          {account.label}
-                        </span>
-                        <span className="font-mono text-xs md:text-sm text-muted-foreground">
-                          {isUnlocked ? account.account_number : maskAccountNumber(account.account_number)}
-                        </span>
+                      <div className="flex items-center gap-2 ml-13 sm:ml-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditForm(account)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeletingAccount(account)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 ml-13 sm:ml-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEditForm(account)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeletingAccount(account)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -357,10 +396,33 @@ const Accounts = () => {
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
+              <Label htmlFor="accountType">Account Type</Label>
+              <Select value={formAccountType} onValueChange={(value) => setFormAccountType(value as AccountType)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select account type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accountTypes.map((type) => {
+                    const IconComponent = type.icon;
+                    return (
+                      <SelectItem key={type.value} value={type.value}>
+                        <div className="flex items-center gap-2">
+                          <div className={`h-5 w-5 rounded-full ${type.color} flex items-center justify-center`}>
+                            <IconComponent className="h-3 w-3 text-white" />
+                          </div>
+                          {type.label}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="label">Label</Label>
               <Input
                 id="label"
-                placeholder="e.g., Bills: Housing Loan"
+                placeholder="e.g., Housing Loan"
                 value={formLabel}
                 onChange={(e) => setFormLabel(e.target.value)}
               />
