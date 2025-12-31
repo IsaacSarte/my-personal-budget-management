@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import SplashScreen from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import MonthlyHistory from "./pages/MonthlyHistory";
+import Accounts from "./pages/Accounts";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { useState } from "react";
@@ -38,6 +39,11 @@ const App = () => {
               <Route path="/monthly-history" element={
                 <ProtectedRoute>
                   <MonthlyHistory />
+                </ProtectedRoute>
+              } />
+              <Route path="/accounts" element={
+                <ProtectedRoute>
+                  <Accounts />
                 </ProtectedRoute>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
