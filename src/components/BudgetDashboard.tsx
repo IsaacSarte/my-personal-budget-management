@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Wallet, TrendingDown, TrendingUp, AlertTriangle, History, LogOut, User } from "lucide-react";
+import { Plus, Wallet, TrendingDown, TrendingUp, AlertTriangle, History, LogOut, User, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -771,11 +771,17 @@ const BudgetDashboard = () => {
       />
 
       {/* Navigation */}
-      <div className="flex justify-center">
+      <div className="flex flex-col sm:flex-row justify-center gap-3">
         <Link to="/monthly-history">
           <Button variant="outline" className="gap-2 w-full sm:w-auto">
             <History className="h-4 w-4" />
             View Monthly History
+          </Button>
+        </Link>
+        <Link to="/accounts">
+          <Button variant="outline" className="gap-2 w-full sm:w-auto">
+            <CreditCard className="h-4 w-4" />
+            My Accounts
           </Button>
         </Link>
       </div>
