@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Eye, EyeOff, Lock, CreditCard, Plus, Pencil, Trash2, X } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, CreditCard, Plus, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,9 +36,12 @@ const Accounts = () => {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Password modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   
   // Form state
   const [showForm, setShowForm] = useState(false);
@@ -73,6 +76,14 @@ const Accounts = () => {
     }
   };
 
+  const handleShowClick = () => {
+    if (isUnlocked) {
+      setIsUnlocked(false);
+    } else {
+      setShowPasswordModal(true);
+    }
+  };
+
   const handleUnlock = async () => {
     if (!password.trim()) {
       toast.error("Please enter your password");
@@ -92,6 +103,8 @@ const Accounts = () => {
         setPassword("");
       } else {
         setIsUnlocked(true);
+        setShowPasswordModal(false);
+        setPassword("");
         toast.success("Accounts unlocked");
       }
     } catch (error) {
@@ -99,11 +112,6 @@ const Accounts = () => {
     } finally {
       setIsVerifying(false);
     }
-  };
-
-  const handleLock = () => {
-    setIsUnlocked(false);
-    setPassword("");
   };
 
   const maskAccountNumber = (accountNumber: string) => {
@@ -146,7 +154,6 @@ const Accounts = () => {
 
     try {
       if (editingAccount) {
-        // Update existing account
         const { error } = await supabase
           .from("accounts")
           .update({
@@ -167,7 +174,6 @@ const Accounts = () => {
         );
         toast.success("Account updated!");
       } else {
-        // Create new account
         const { data, error } = await supabase
           .from("accounts")
           .insert({
@@ -228,47 +234,11 @@ const Accounts = () => {
             </Link>
             <h1 className="text-xl md:text-2xl font-bold text-foreground">Accounts</h1>
           </div>
-          {isUnlocked && (
-            <Button onClick={openAddForm} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Account
-            </Button>
-          )}
+          <Button onClick={openAddForm} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Account
+          </Button>
         </div>
-
-        {/* Unlock Card */}
-        {!isUnlocked && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                <Lock className="h-5 w-5 text-muted-foreground" />
-                Account Details Protected
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Enter your password to view and manage account details.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Input
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                  className="flex-1"
-                />
-                <Button 
-                  onClick={handleUnlock} 
-                  disabled={isVerifying}
-                  className="w-full sm:w-auto"
-                >
-                  {isVerifying ? "Verifying..." : "Unlock"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Accounts List */}
         <Card>
@@ -277,12 +247,19 @@ const Accounts = () => {
               <CreditCard className="h-5 w-5" />
               My Accounts
             </CardTitle>
-            {isUnlocked && (
-              <Button variant="ghost" size="sm" onClick={handleLock}>
-                <EyeOff className="h-4 w-4 mr-2" />
-                Lock
-              </Button>
-            )}
+            <Button variant="ghost" size="sm" onClick={handleShowClick}>
+              {isUnlocked ? (
+                <>
+                  <EyeOff className="h-4 w-4 mr-2" />
+                  Hide
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Show
+                </>
+              )}
+            </Button>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -291,7 +268,7 @@ const Accounts = () => {
               </p>
             ) : accounts.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
-                {isUnlocked ? "No accounts added yet. Click 'Add Account' to create one." : "No accounts added yet."}
+                No accounts added yet. Click 'Add Account' to create one.
               </p>
             ) : (
               <div className="space-y-4">
@@ -314,27 +291,21 @@ const Accounts = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 ml-13 sm:ml-0">
-                      {isUnlocked ? (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditForm(account)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeletingAccount(account)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEditForm(account)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeletingAccount(account)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -343,6 +314,38 @@ const Accounts = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Password Verification Modal */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enter Password</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-muted-foreground">
+              Enter your password to view account details.
+            </p>
+            <Input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+            />
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => {
+                setShowPasswordModal(false);
+                setPassword("");
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleUnlock} disabled={isVerifying}>
+                {isVerifying ? "Verifying..." : "Unlock"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Add/Edit Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
