@@ -76,6 +76,9 @@ const Accounts = () => {
   
   // Delete state
   const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
+  
+  // Pending edit (awaiting password verification)
+  const [pendingEditAccount, setPendingEditAccount] = useState<Account | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -126,10 +129,20 @@ const Accounts = () => {
         toast.error("Incorrect password");
         setPassword("");
       } else {
-        setIsUnlocked(true);
+        // If there's a pending edit, open the edit form
+        if (pendingEditAccount) {
+          setEditingAccount(pendingEditAccount);
+          setFormLabel(pendingEditAccount.label);
+          setFormAccountNumber(pendingEditAccount.account_number);
+          setFormAccountType(pendingEditAccount.account_type || "other");
+          setShowForm(true);
+          setPendingEditAccount(null);
+        } else {
+          setIsUnlocked(true);
+          toast.success("Accounts unlocked");
+        }
         setShowPasswordModal(false);
         setPassword("");
-        toast.success("Accounts unlocked");
       }
     } catch (error) {
       toast.error("Failed to verify password");
@@ -151,11 +164,9 @@ const Accounts = () => {
   };
 
   const openEditForm = (account: Account) => {
-    setEditingAccount(account);
-    setFormLabel(account.label);
-    setFormAccountNumber(account.account_number);
-    setFormAccountType(account.account_type || "other");
-    setShowForm(true);
+    // Require password verification before editing
+    setPendingEditAccount(account);
+    setShowPasswordModal(true);
   };
 
   const closeForm = () => {
@@ -355,14 +366,22 @@ const Accounts = () => {
       </div>
 
       {/* Password Verification Modal */}
-      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+      <Dialog open={showPasswordModal} onOpenChange={(open) => {
+        if (!open) {
+          setShowPasswordModal(false);
+          setPassword("");
+          setPendingEditAccount(null);
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Enter Password</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <p className="text-sm text-muted-foreground">
-              Enter your password to view account details.
+              {pendingEditAccount 
+                ? "Enter your password to edit this account."
+                : "Enter your password to view account details."}
             </p>
             <Input
               type="password"
@@ -375,11 +394,12 @@ const Accounts = () => {
               <Button variant="outline" onClick={() => {
                 setShowPasswordModal(false);
                 setPassword("");
+                setPendingEditAccount(null);
               }}>
                 Cancel
               </Button>
               <Button onClick={handleUnlock} disabled={isVerifying}>
-                {isVerifying ? "Verifying..." : "Unlock"}
+                {isVerifying ? "Verifying..." : "Confirm"}
               </Button>
             </div>
           </div>
